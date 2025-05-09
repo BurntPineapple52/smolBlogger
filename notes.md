@@ -7,3 +7,4 @@
 - I then asked for guided instructions to set up my blogging agents. Here's my attempt to implement based off of that.  I'll be saving the instructions as imp1.md
  - sick I got smolagent to run a test, and it looks like it's functioning fine just fine.  websearch worked and the fibanachi test worked.  Token usage seems acceptable with input tokens at ~5k and output at ~500 per 2 step task. 
  - model wise I've been using qwen 2.5 7b instruct free via litellm and openrouter. 
+ - I tried to do a mini "research" question, asking it to return the highest starred LLM observability platforms, and it did a good job! It got stuck for a bunch of loops, I think cause qwen 7b is just too small a context window to do real webscraping, but it still got me a good list.  
