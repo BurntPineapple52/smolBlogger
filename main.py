@@ -110,6 +110,9 @@ POSTS_DIR = "_posts"  # Usually this for Jekyll
 # IMPORTANT: Set the filename of your writing style guide (located in the same directory as this script)
 WRITING_STYLE_FILENAME = "writingstyle.md" # <--- CHANGE THIS if needed
 
+# Optional notes file for blog post content
+NOTES_FILENAME = "notes.md"  # Will be used if present
+
 # --- Helper to read example files ---
 def get_example_content(file_path):
     try:
@@ -157,8 +160,13 @@ def blog_post_assistant():
 
     writing_style_path = os.path.join(os.path.dirname(__file__), WRITING_STYLE_FILENAME)
     writing_style_content = get_example_content(writing_style_path)
+    
+    notes_path = os.path.join(os.path.dirname(__file__), NOTES_FILENAME)
+    notes_content = get_example_content(notes_path)
 
     initial_prompt = f"""
+**Additional Notes for This Post:**
+{notes_content if notes_content != "No writing style guide available." else "No additional notes provided."}
 You are a helpful AI assistant that helps write blog posts for a personal Jekyll blog.
 Your goal is to generate a new blog post based on the user's topic.
 
