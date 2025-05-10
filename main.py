@@ -107,9 +107,8 @@ LOCAL_BLOG_REPO_PATH = r'C:\Users\maxro\Documents\GitHub\burntpineapple52.github
 # Relative path to the posts directory within your blog repo
 POSTS_DIR = "_posts"  # Usually this for Jekyll
 
-# IMPORTANT: Set the filenames of your example posts (located in LOCAL_BLOG_REPO_PATH/POSTS_DIR/)
-EXAMPLE_POST_1_FILENAME = "2024-10-03-today-1.md" # <--- CHANGE THIS
-EXAMPLE_POST_2_FILENAME = "2024-10-04-today-2.md" # <--- CHANGE THIS
+# IMPORTANT: Set the filename of your writing style guide (located in the same directory as this script)
+WRITING_STYLE_FILENAME = "writingstyle.md" # <--- CHANGE THIS if needed
 
 # --- Helper to read example files ---
 def get_example_content(file_path):
@@ -117,11 +116,11 @@ def get_example_content(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        print(f"Warning: Example post {file_path} not found. Style guidance will be limited.")
-        return "No example content available."
+        print(f"Warning: Writing style guide {file_path} not found. Style guidance will be limited.")
+        return "No writing style guide available."
     except Exception as e:
         print(f"Warning: Error reading {file_path}: {e}. Style guidance will be limited.")
-        return "Error reading example content."
+        return "Error reading writing style guide."
 
 # --- Main Application Logic ---
 def blog_post_assistant():
@@ -156,10 +155,8 @@ def blog_post_assistant():
 
     user_topic = input("What topic would you like the blog post to be about?\n> ")
 
-    example_post_path_1 = os.path.join(LOCAL_BLOG_REPO_PATH, POSTS_DIR, EXAMPLE_POST_1_FILENAME)
-    example_post_path_2 = os.path.join(LOCAL_BLOG_REPO_PATH, POSTS_DIR, EXAMPLE_POST_2_FILENAME)
-    example_content_1 = get_example_content(example_post_path_1)
-    example_content_2 = get_example_content(example_post_path_2)
+    writing_style_path = os.path.join(os.path.dirname(__file__), WRITING_STYLE_FILENAME)
+    writing_style_content = get_example_content(writing_style_path)
 
     initial_prompt = f"""
 You are a helpful AI assistant that helps write blog posts for a personal Jekyll blog.
@@ -168,8 +165,8 @@ Your goal is to generate a new blog post based on the user's topic.
 **User's Topic:** "{user_topic}"
 
 **Style and Tone Guidelines:**
-Please emulate the style and tone of the following:
-{example_content_1}
+Please follow the writing style guide:
+{writing_style_content}
 
 **Formatting Requirements (Jekyll Markdown):**
 The post MUST be in Markdown format.
