@@ -3,6 +3,8 @@ import sys
 from datetime import datetime
 from smolagents import CodeAgent, LiteLLMModel, tool
 from git import Repo, GitCommandError # pip install GitPython
+from phoenix.otel import register
+from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 
 # --- Custom Tool Definitions ---
 
@@ -136,6 +138,10 @@ def blog_post_assistant():
     # llm_model = LiteLLMModel(model_id=LLM_MODEL_ID, api_key="sk-...")
     llm_model = LiteLLMModel(model_id=LLM_MODEL_ID)
     print(f"Using LLM: {LLM_MODEL_ID}")
+
+    # Initialize telemetry
+    register()
+    SmolagentsInstrumentor().instrument()
 
     # Initialize Agent
     tools = [get_current_date_tool, github_commit_tool]
