@@ -99,7 +99,7 @@ def github_commit_tool(repo_path: str, relative_file_path: str, file_content: st
 # Examples: "gpt-4o", "anthropic/claude-3-5-sonnet-20240620", "ollama_chat/llama3" (if ollama is running)
 # Ensure necessary API keys (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY) are set in your environment
 # or pass api_key="YOUR_KEY" to LiteLLMModel.
-LLM_MODEL_ID = "openrouter/qwen/qwen-2.5-7b-instruct:free"  # <--- CHANGE THIS TO YOUR PREFERRED MODEL
+LLM_MODEL_ID = "openrouter/google/gemini-2.0-flash-exp:free"  # <--- CHANGE THIS TO YOUR PREFERRED MODEL
 
 # IMPORTANT: Set the absolute path to your local clone of the blog repository
 LOCAL_BLOG_REPO_PATH = r'C:\Users\maxro\Documents\GitHub\burntpineapple52.github.io'  # <--- CHANGE THIS
@@ -136,7 +136,14 @@ def blog_post_assistant():
     # llm_model = LiteLLMModel(model_id=LLM_MODEL_ID, api_base="http://localhost:11434")
     # If your model requires an API key directly:
     # llm_model = LiteLLMModel(model_id=LLM_MODEL_ID, api_key="sk-...")
-    llm_model = LiteLLMModel(model_id=LLM_MODEL_ID)
+    llm_model = LiteLLMModel(
+        model_id=LLM_MODEL_ID,
+        provider={
+            "only": [
+                "Google AI Studio"
+                ]
+            }
+        )
     print(f"Using LLM: {LLM_MODEL_ID}")
 
     # Initialize telemetry
@@ -161,14 +168,8 @@ Your goal is to generate a new blog post based on the user's topic.
 **User's Topic:** "{user_topic}"
 
 **Style and Tone Guidelines:**
-Please emulate the style and tone of the following example posts:
---- EXAMPLE POST 1 ---
+Please emulate the style and tone of the following:
 {example_content_1}
---- END EXAMPLE POST 1 ---
-
---- EXAMPLE POST 2 ---
-{example_content_2}
---- END EXAMPLE POST 2 ---
 
 **Formatting Requirements (Jekyll Markdown):**
 The post MUST be in Markdown format.
@@ -176,7 +177,6 @@ It MUST include Jekyll frontmatter at the very beginning, enclosed by triple hyp
 The frontmatter should include (adapt based on examples if they differ, but ensure these are present):
 - layout: post
 - title: [A suitable title for the blog post, based on the topic. This title will also be used for the filename and commit message.]
-- date: [Use the `get_current_date_tool()` to get today's date in YYYY-MM-DD format. Then, construct the full date string for Jekyll like 'YYYY-MM-DD HH:MM:SS +/-ZZZZ'. For example, if the tool returns '2024-07-29', you could use '2024-07-29 10:00:00 -0700'. Pick a sensible time (e.g., 10:00:00) and a common timezone offset (e.g., -0700 for PDT, +0000 for UTC, or match the examples).]
 - (Include other common frontmatter fields from the examples, like 'tags: [tag1, tag2]', 'categories: [category]', 'excerpt_separator: "<!--more-->"', etc. If examples have 'author', include that too.)
 
 The filename for the post should be in the format: YYYY-MM-DD-slugified-title.md.
