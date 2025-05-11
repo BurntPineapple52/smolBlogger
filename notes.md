@@ -8,3 +8,8 @@
  - sick I got smolagent to run a test, and it looks like it's functioning fine just fine.  websearch worked and the fibanachi test worked.  Token usage seems acceptable with input tokens at ~5k and output at ~500 per 2 step task. 
  - model wise I've been using qwen 2.5 7b instruct free via litellm and openrouter. 
  - I tried to do a mini "research" question, asking it to return the highest starred LLM observability platforms, and it did a good job! It got stuck for a bunch of loops, I think cause qwen 7b is just too small a context window to do real webscraping, but it still got me a good list.  
+ - First round of changes I want: 
+    - modularize the style gathering process.  I should make a writingstyle.md file that I can update as i see fit.  It doesn't make a ton of sense to generate that over and over if it'll be (mostly) static. 
+    - For now, remove the date from the header of the post.md blog file that gets generated. This has scheduling functionality in Jekyll which means if I put the date to today and don't align the date AND time with whatever system time github pages uses (I'm assuming this is what's going on, system time stuff is a great enemy)
+    - Pull the notes.md file I create with each of these repos.  That plus the style guide should be enough to create a solid first draft.
+    - If draft is denied instead of being iterated on, ask if you want to save it as a draft.  

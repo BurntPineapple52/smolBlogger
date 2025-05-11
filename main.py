@@ -3,6 +3,8 @@ import sys
 from datetime import datetime
 from smolagents import CodeAgent, LiteLLMModel, tool
 from git import Repo, GitCommandError # pip install GitPython
+from phoenix.otel import register
+from openinference.instrumentation.smolagents import SmolagentsInstrumentor
 
 # --- Custom Tool Definitions ---
 
@@ -97,7 +99,7 @@ def github_commit_tool(repo_path: str, relative_file_path: str, file_content: st
 # Examples: "gpt-4o", "anthropic/claude-3-5-sonnet-20240620", "ollama_chat/llama3" (if ollama is running)
 # Ensure necessary API keys (e.g., OPENAI_API_KEY, ANTHROPIC_API_KEY) are set in your environment
 # or pass api_key="YOUR_KEY" to LiteLLMModel.
-LLM_MODEL_ID = "openrouter/qwen/qwen-2.5-7b-instruct:free"  # <--- CHANGE THIS TO YOUR PREFERRED MODEL
+LLM_MODEL_ID = "openrouter/google/gemini-2.0-flash-exp:free"  # <--- CHANGE THIS TO YOUR PREFERRED MODEL
 
 # IMPORTANT: Set the absolute path to your local clone of the blog repository
 LOCAL_BLOG_REPO_PATH = r'C:\Users\maxro\Documents\GitHub\burntpineapple52.github.io'  # <--- CHANGE THIS
@@ -105,9 +107,11 @@ LOCAL_BLOG_REPO_PATH = r'C:\Users\maxro\Documents\GitHub\burntpineapple52.github
 # Relative path to the posts directory within your blog repo
 POSTS_DIR = "_posts"  # Usually this for Jekyll
 
-# IMPORTANT: Set the filenames of your example posts (located in LOCAL_BLOG_REPO_PATH/POSTS_DIR/)
-EXAMPLE_POST_1_FILENAME = "2024-10-03-today-1.md" # <--- CHANGE THIS
-EXAMPLE_POST_2_FILENAME = "2024-10-04-today-2.md" # <--- CHANGE THIS
+# IMPORTANT: Set the filename of your writing style guide (located in the same directory as this script)
+WRITING_STYLE_FILENAME = "writingstyle.md" # <--- CHANGE THIS if needed
+
+# Optional notes file for blog post content
+NOTES_FILENAME = "notes.md"  # Will be used if present
 
 # --- Helper to read example files ---
 def get_example_content(file_path):
@@ -115,11 +119,11 @@ def get_example_content(file_path):
         with open(file_path, "r", encoding="utf-8") as f:
             return f.read()
     except FileNotFoundError:
-        print(f"Warning: Example post {file_path} not found. Style guidance will be limited.")
-        return "No example content available."
+        print(f"Warning: Writing style guide {file_path} not found. Style guidance will be limited.")
+        return "No writing style guide available."
     except Exception as e:
         print(f"Warning: Error reading {file_path}: {e}. Style guidance will be limited.")
-        return "Error reading example content."
+        return "Error reading writing style guide."
 
 # --- Main Application Logic ---
 def blog_post_assistant():
@@ -134,8 +138,19 @@ def blog_post_assistant():
     # llm_model = LiteLLMModel(model_id=LLM_MODEL_ID, api_base="http://localhost:11434")
     # If your model requires an API key directly:
     # llm_model = LiteLLMModel(model_id=LLM_MODEL_ID, api_key="sk-...")
-    llm_model = LiteLLMModel(model_id=LLM_MODEL_ID)
+    llm_model = LiteLLMModel(
+        model_id=LLM_MODEL_ID,
+        provider={
+            "only": [
+                "Google AI Studio"
+                ]
+            }
+        )
     print(f"Using LLM: {LLM_MODEL_ID}")
+
+    # Initialize telemetry
+    register()
+    SmolagentsInstrumentor().instrument()
 
     # Initialize Agent
     tools = [get_current_date_tool, github_commit_tool]
@@ -143,26 +158,23 @@ def blog_post_assistant():
 
     user_topic = input("What topic would you like the blog post to be about?\n> ")
 
-    example_post_path_1 = os.path.join(LOCAL_BLOG_REPO_PATH, POSTS_DIR, EXAMPLE_POST_1_FILENAME)
-    example_post_path_2 = os.path.join(LOCAL_BLOG_REPO_PATH, POSTS_DIR, EXAMPLE_POST_2_FILENAME)
-    example_content_1 = get_example_content(example_post_path_1)
-    example_content_2 = get_example_content(example_post_path_2)
+    writing_style_path = os.path.join(os.path.dirname(__file__), WRITING_STYLE_FILENAME)
+    writing_style_content = get_example_content(writing_style_path)
+    
+    notes_path = os.path.join(os.path.dirname(__file__), NOTES_FILENAME)
+    notes_content = get_example_content(notes_path)
 
     initial_prompt = f"""
+**Additional Notes for This Post:**
+{notes_content if notes_content != "No writing style guide available." else "No additional notes provided."}
 You are a helpful AI assistant that helps write blog posts for a personal Jekyll blog.
 Your goal is to generate a new blog post based on the user's topic.
 
 **User's Topic:** "{user_topic}"
 
 **Style and Tone Guidelines:**
-Please emulate the style and tone of the following example posts:
---- EXAMPLE POST 1 ---
-{example_content_1}
---- END EXAMPLE POST 1 ---
-
---- EXAMPLE POST 2 ---
-{example_content_2}
---- END EXAMPLE POST 2 ---
+Please follow the writing style guide:
+{writing_style_content}
 
 **Formatting Requirements (Jekyll Markdown):**
 The post MUST be in Markdown format.
@@ -170,7 +182,6 @@ It MUST include Jekyll frontmatter at the very beginning, enclosed by triple hyp
 The frontmatter should include (adapt based on examples if they differ, but ensure these are present):
 - layout: post
 - title: [A suitable title for the blog post, based on the topic. This title will also be used for the filename and commit message.]
-- date: [Use the `get_current_date_tool()` to get today's date in YYYY-MM-DD format. Then, construct the full date string for Jekyll like 'YYYY-MM-DD HH:MM:SS +/-ZZZZ'. For example, if the tool returns '2024-07-29', you could use '2024-07-29 10:00:00 -0700'. Pick a sensible time (e.g., 10:00:00) and a common timezone offset (e.g., -0700 for PDT, +0000 for UTC, or match the examples).]
 - (Include other common frontmatter fields from the examples, like 'tags: [tag1, tag2]', 'categories: [category]', 'excerpt_separator: "<!--more-->"', etc. If examples have 'author', include that too.)
 
 The filename for the post should be in the format: YYYY-MM-DD-slugified-title.md.
@@ -180,7 +191,7 @@ A slugified title is all lowercase, with spaces replaced by hyphens, and special
 1. Generate a compelling title for the blog post based on the user's topic.
 2. Use the `get_current_date_tool()` to get today's date for the frontmatter and filename.
 3. Construct the full blog post content, including the Jekyll frontmatter and the main body.
-4. The main body should be well-structured, engaging, and match the style of the examples.
+4. The main body should be well-structured, engaging, and match the style of the examples. Include headers where appropriate.
 5. Output the complete Markdown content of the blog post (frontmatter + body) by calling `final_answer(markdown_content)`. Do NOT try to commit it yet.
     """
 
