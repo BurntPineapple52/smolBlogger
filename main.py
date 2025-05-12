@@ -1,10 +1,14 @@
 import os
 import sys
 from datetime import datetime
-from smolagents import CodeAgent, LiteLLMModel, tool
-from git import Repo, GitCommandError # pip install GitPython
 from phoenix.otel import register
 from openinference.instrumentation.smolagents import SmolagentsInstrumentor
+# Initialize telemetry
+register()
+SmolagentsInstrumentor().instrument()
+
+from smolagents import CodeAgent, LiteLLMModel, tool
+from git import Repo, GitCommandError # pip install GitPython
 
 # --- Custom Tool Definitions ---
 
@@ -148,9 +152,6 @@ def blog_post_assistant():
         )
     print(f"Using LLM: {LLM_MODEL_ID}")
 
-    # Initialize telemetry
-    register()
-    SmolagentsInstrumentor().instrument()
 
     # Initialize Agent
     tools = [get_current_date_tool, github_commit_tool]
@@ -189,7 +190,7 @@ A slugified title is all lowercase, with spaces replaced by hyphens, and special
 
 **Your Task:**
 1. Generate a compelling title for the blog post based on the user's topic.
-2. Use the `get_current_date_tool()` to get today's date for the frontmatter and filename.
+2. Use the `get_current_date_tool()` to get today's date for the filename.
 3. Construct the full blog post content, including the Jekyll frontmatter and the main body.
 4. The main body should be well-structured, engaging, and match the style of the examples. Include headers where appropriate.
 5. Output the complete Markdown content of the blog post (frontmatter + body) by calling `final_answer(markdown_content)`. Do NOT try to commit it yet.
